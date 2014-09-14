@@ -65,8 +65,9 @@ object Application extends Controller {
       .continually (reader.read)
       .takeWhile (-1 !=)
       .foreach (writer.write)
+    val MimeType = "image/png"
 
-    Ok.sendFile(file)
+    Ok.sendFile(file).as(MimeType)
   }
 
 }
