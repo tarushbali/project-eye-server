@@ -65,7 +65,7 @@ object Application extends Controller {
       .continually (reader.read)
       .takeWhile (-1 !=)
       .foreach (writer.write)
-    Ok.sendFile(content = file, inline = true).withHeaders(CONTENT_TYPE -> "image/png")
+    Ok.sendFile(content = file, inline = true)
   }
 
 }
