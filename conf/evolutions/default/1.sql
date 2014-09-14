@@ -1,9 +1,9 @@
-  # Users schema
+# Users schema
 
 # --- !Ups
 
 CREATE TABLE LatestVersion (
-    id bigint(20) NOT NULL
+  id bigint(20) NOT NULL
 );
 
 # --- !Downs
