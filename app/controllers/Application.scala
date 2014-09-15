@@ -5,8 +5,9 @@ import java.io._
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.s3.AmazonS3Client
 import com.amazonaws.services.s3.model.S3Object
+import com.amazonaws.util.IOUtils
 import play.api.libs.json.Json
-import play.api.mvc.{Action, Controller}
+import play.api.mvc.{ResponseHeader, SimpleResult, Action, Controller}
 import play.api.db._
 import anorm._
 import play.api.Play.current
@@ -57,15 +58,10 @@ object Application extends Controller {
     val amazonS3Client = new AmazonS3Client(yourAWSCredentials)
     val downloadedObject: S3Object = amazonS3Client.getObject(bucketName, timestamp.toString)
 
-    val reader = new BufferedInputStream(downloadedObject.getObjectContent)
-    val file: File = new File("/tmp/" + timestamp.toString)
-    val writer = new BufferedOutputStream(new FileOutputStream(file))
+    val content = downloadedObject.getObjectContent
 
-    Iterator
-      .continually (reader.read)
-      .takeWhile (-1 !=)
-      .foreach (writer.write)
-    Ok.sendFile(content = file, inline = true).withHeaders(CONTENT_TYPE -> "image/jpeg")
+    Ok(IOUtils.toByteArray(content))
+      .withHeaders(CONTENT_TYPE -> "image/jpeg")
   }
 
 }
