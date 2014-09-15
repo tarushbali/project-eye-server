@@ -1,16 +1,13 @@
 package controllers
 
-import java.io._
-
+import anorm._
 import com.amazonaws.auth.BasicAWSCredentials
 import com.amazonaws.services.s3.AmazonS3Client
-import com.amazonaws.services.s3.model.S3Object
 import com.amazonaws.util.IOUtils
-import play.api.libs.json.Json
-import play.api.mvc.{ResponseHeader, SimpleResult, Action, Controller}
-import play.api.db._
-import anorm._
 import play.api.Play.current
+import play.api.db._
+import play.api.libs.json.Json
+import play.api.mvc.{Action, Controller}
 
 object Application extends Controller {
   private val AWS_ACCESS_KEY = "AKIAJMABWBEQQ3WRFCYA"
@@ -30,17 +27,14 @@ object Application extends Controller {
   }
 
   def upload = Action(parse.multipartFormData) { request =>
-
     request.body.file("picture").map { picture =>
       import java.io.File
       val filename = picture.filename
       val contentType = picture.contentType
       val file = new File("/tmp/picture")
       picture.ref.moveTo(file, true)
-      val yourAWSCredentials = new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-      val amazonS3Client = new AmazonS3Client(yourAWSCredentials)
       val currentTime = System.currentTimeMillis()
-      amazonS3Client.putObject(bucketName, currentTime.toString, file)
+      getAmazonClient.putObject(bucketName, currentTime.toString, file)
       DB.withConnection { implicit c =>
         val id: Int = SQL("insert into LatestVersion(id) values ({id})")
           .on('id -> currentTime.toLong).executeUpdate()
@@ -54,14 +48,13 @@ object Application extends Controller {
   }
 
   def download(timestamp: Long) = Action {
-    val yourAWSCredentials = new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY)
-    val amazonS3Client = new AmazonS3Client(yourAWSCredentials)
-    val downloadedObject: S3Object = amazonS3Client.getObject(bucketName, timestamp.toString)
-
-    val content = downloadedObject.getObjectContent
-
-    Ok(IOUtils.toByteArray(content))
+    val downloadedObject = getAmazonClient.getObject(bucketName, timestamp.toString).getObjectContent
+    Ok(IOUtils.toByteArray(downloadedObject))
       .withHeaders(CONTENT_TYPE -> "image/jpeg")
   }
 
+  def getAmazonClient = {
+    val yourAWSCredentials = new BasicAWSCredentials(AWS_ACCESS_KEY, AWS_SECRET_KEY)
+    new AmazonS3Client(yourAWSCredentials)
+  }
 }
