@@ -10,8 +10,6 @@ import play.api.libs.json.Json
 import play.api.mvc.{Action, Controller}
 
 object Application extends Controller {
-  private val AWS_ACCESS_KEY = "AKIAJMABWBEQQ3WRFCYA"
-  private val AWS_SECRET_KEY = "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"
   private val bucketName = "lockscreens"
   private val latestVersionFile = "latestVersion"
 
